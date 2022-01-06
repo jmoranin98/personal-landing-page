@@ -1,0 +1,28 @@
+version: '3.5'
+services:
+  traefik:
+    image: traefik:2.5
+    restart: always
+    command:
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --providers.docker=true
+      - --certificatesresolvers.le.acme.email=jesusmoran2098@gmail.com
+      - --certificatesresolvers.le.acme.storage=/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./public:/usr/share/nginx/html
+    restart: always
+    labels:
+      - "traefik.http.routers.nginx.rule=Host(`resep.duckdns.org`)"
+      - "traefik.http.routers.nginx.tls=true"
+      - "traefik.http.routers.nginx.tls.certresolver=le"
